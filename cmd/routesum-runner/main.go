@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,18 +15,12 @@ import (
 )
 
 func main() {
-	timePath := flag.String("time", "/usr/bin/time", "Path to the time binary.")
-	rsPath := flag.String("routesum", "routesum", "Path to the routesum binary. Defaults to first found in $PATH.")
-	inputPath := flag.String("input", "", "Path to routesum input. Required.")
-	numRuns := flag.Int("num-runs", 1, "Number of times to run the input.")
-	runLabel := flag.String("run-label", "", "Label for the run(s). Required.")
-
-	flag.Parse()
-	if len(*runLabel) == 0 {
-		fatalf(errors.New("run-label cannot be empty"))
+	a, err := parseArgs()
+	if err != nil {
+		fatalf(fmt.Errorf("parse args: %w", err))
 	}
 
-	if err := runAndInterpret(*timePath, *rsPath, *inputPath, *numRuns, *runLabel); err != nil {
+	if err := runAllInputsAndBinaries(a); err != nil {
 		fatalf(fmt.Errorf("run and interpret: %w", err))
 	}
 }
@@ -37,7 +30,34 @@ func fatalf(err error) {
 	os.Exit(-1)
 }
 
-func runAndInterpret(timePath, rsPath, inputPath string, numRuns int, runLabel string) error {
+func runAllInputsAndBinaries(a *args) error {
+	csvOut := csv.NewWriter(os.Stdout)
+	if err := csvOut.Write([]string{"Input", "Binary", "Metric", "Amount"}); err != nil {
+		return errors.Wrap(err, "write csv header")
+	}
+
+	for _, inputPath := range a.inputPaths {
+		for _, rsBinPath := range a.rsBinPaths {
+			err := runNTimesAndInterpret(a.timeBinPath, rsBinPath, inputPath, a.numRuns, csvOut)
+			if err != nil {
+				return fmt.Errorf("processing %s with %s: %w", inputPath, rsBinPath, err)
+			}
+		}
+	}
+
+	csvOut.Flush()
+	if err := csvOut.Error(); err != nil {
+		return errors.Wrapf(err, "flush csv buffer")
+	}
+
+	return nil
+}
+
+func runNTimesAndInterpret(
+	timeBinPath, rsBinPath, inputPath string,
+	numRuns int,
+	csvOut *csv.Writer,
+) error {
 	inputFile, err := os.Open(filepath.Clean(inputPath))
 	if err != nil {
 		return errors.Wrapf(err, "open %s for reading", inputPath)
@@ -49,11 +69,7 @@ func runAndInterpret(timePath, rsPath, inputPath string, numRuns int, runLabel s
 	}()
 
 	inputBase := filepath.Base(inputPath)
-
-	csvOut := csv.NewWriter(os.Stdout)
-	if err := csvOut.Write([]string{"Input", "Label", "Metric", "Amount"}); err != nil {
-		return errors.Wrap(err, "write csv header")
-	}
+	rsBinBase := filepath.Base(rsBinPath)
 
 	for i := 0; i < numRuns; i++ {
 		if i != 0 {
@@ -63,13 +79,13 @@ func runAndInterpret(timePath, rsPath, inputPath string, numRuns int, runLabel s
 		}
 
 		var b bytes.Buffer
-		cmd := exec.Command(filepath.Clean(timePath), filepath.Clean(rsPath), "-show-mem-stats") //nolint: gosec
+		cmd := exec.Command(filepath.Clean(timeBinPath), filepath.Clean(rsBinPath), "-show-mem-stats") //nolint: gosec
 		cmd.Stdin = inputFile
 		cmd.Stdout = nil
 		cmd.Stderr = &b
 
 		if err := cmd.Run(); err != nil {
-			return errors.Wrap(err, "run routesum")
+			return errors.Wrap(err, "run")
 		}
 
 		measurements, err := interpret(b.String())
@@ -77,15 +93,10 @@ func runAndInterpret(timePath, rsPath, inputPath string, numRuns int, runLabel s
 			return fmt.Errorf("interpret mem stat output: %w", err)
 		}
 		for _, m := range measurements {
-			if err := csvOut.Write([]string{inputBase, runLabel, m.metric, m.amount}); err != nil {
+			if err := csvOut.Write([]string{inputBase, rsBinBase, m.metric, m.amount}); err != nil {
 				return errors.Wrap(err, "write csv data line")
 			}
 		}
-	}
-
-	csvOut.Flush()
-	if err := csvOut.Error(); err != nil {
-		return errors.Wrapf(err, "flush csv buffer")
 	}
 
 	return nil
