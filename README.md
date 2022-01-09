@@ -14,22 +14,32 @@ into a spreadsheet for analysis.
 ```
 $ ./routesum-runner -h
 Usage of ./routesum-runner:
-  -input string
-        Path to routesum input. Required.
+  -input value
+        Path to an input file. Can be specified multiple times. At least once is required.
   -num-runs int
-        Number of times to run the input. (default 1)
-  -routesum string
-        Path to the routesum binary. Defaults to first found in $PATH. (default "routesum")
-  -run-label string
-        Label for the run(s). Required.
+        Number of times to run each input against each routesum binary (default 5)
+  -routesum value
+        Path to routesum binary. Can be specified multiple times. At least once is required.
   -time string
         Path to the time binary. (default "/usr/bin/time")
 
-$ ./routesum-runner -input networks.txt -num-runs 10 -run-label 'binary search tree'
-Input,Label,Metric,Amount
-networks.txt,binary search tree,To Store Routes - Δ total bytes allocated,17897192
-networks.txt,binary search tree,To Store Routes - Δ mallocs,583904
-networks.txt,binary search tree,To Store Routes - Δ frees,310725
+$ ./routesum-runner -input ~/routesum-performance/dshield-intelfeed-ips.txt -input ~/routesum-performance/GeoLite2-Country-Networks.txt -routesum ./routesum-bst -routesum ./routesum-radix -num-runs 10
+Input,Binary,Metric,Amount
+dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ total allocated bytes,44914264
+dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ mallocs,1594243
+dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ frees,468337
+...
+dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ total allocated bytes,17896936
+dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ mallocs,583901
+dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ frees,312098
+...
+GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ total allocated bytes,2355023304
+GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ mallocs,24400781
+GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ frees,23528854
+...
+GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ total allocated bytes,852038168
+GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ mallocs,17451592
+GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ frees,16970186
 ...
 ```
 
