@@ -1,3 +1,4 @@
+// Package main provides a program that creates CSVs of routesum performance data over multiple runs
 package main
 
 import (
@@ -32,7 +33,7 @@ func fatalf(err error) {
 
 func runAllInputsAndBinaries(a *args) error {
 	csvOut := csv.NewWriter(os.Stdout)
-	if err := csvOut.Write([]string{"Input", "Binary", "Metric", "Amount"}); err != nil {
+	if err := csvOut.Write([]string{"Input", "Metric", "Binary", "Amount"}); err != nil {
 		return errors.Wrap(err, "write csv header")
 	}
 
@@ -62,7 +63,7 @@ func runNTimesAndInterpret(
 	if err != nil {
 		return errors.Wrapf(err, "open %s for reading", inputPath)
 	}
-	defer func() { //nolint: gosec // we're just reading from the file
+	defer func() {
 		if err := inputFile.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to close input file: %+v\n", err)
 		}
@@ -93,7 +94,7 @@ func runNTimesAndInterpret(
 			return fmt.Errorf("interpret mem stat output: %w", err)
 		}
 		for _, m := range measurements {
-			if err := csvOut.Write([]string{inputBase, rsBinBase, m.metric, m.amount}); err != nil {
+			if err := csvOut.Write([]string{inputBase, m.metric, rsBinBase, m.amount}); err != nil {
 				return errors.Wrap(err, "write csv data line")
 			}
 		}
@@ -107,27 +108,18 @@ type measurement struct {
 	amount string
 }
 
-var (
-	sectionLineRE = regexp.MustCompile(`^\S`)
-	timeLineRE    = regexp.MustCompile(`^ *(?:\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
-)
+var timeLineRE = regexp.MustCompile(`^ *(?:\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
 
 func interpret(memStats string) ([]measurement, error) {
 	var measurements []measurement
 
-	var section string
 	s := bufio.NewScanner(strings.NewReader(memStats))
 	for s.Scan() {
 		line := s.Text()
-		if sectionLineRE.MatchString(line) {
-			// Starting a new section
-			section = line
-			continue
-		}
 
 		matches := timeLineRE.FindStringSubmatch(line)
 		if len(matches) > 0 {
-			// Parsing time output
+			// It's time output
 			measurements = append(measurements, []measurement{
 				{
 					metric: "User-space Time",
@@ -142,17 +134,13 @@ func interpret(memStats string) ([]measurement, error) {
 			continue
 		}
 
-		// routesum memory metric
+		// It's a routesum memory metric
 		parts := strings.SplitN(line, ":", 2)
 		if len(parts) < 2 {
 			panic(line)
 		}
 		measurements = append(measurements, measurement{
-			metric: fmt.Sprintf(
-				"%s - %s",
-				section,
-				strings.TrimSpace(strings.SplitN(parts[0], "(", 2)[0]),
-			),
+			metric: strings.TrimSpace(parts[0]),
 			amount: strings.TrimSpace(parts[1]),
 		})
 	}
