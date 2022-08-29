@@ -33,7 +33,7 @@ func fatalf(err error) {
 
 func runAllInputsAndBinaries(a *args) error {
 	csvOut := csv.NewWriter(os.Stdout)
-	if err := csvOut.Write([]string{"Input", "Binary", "Metric", "Amount"}); err != nil {
+	if err := csvOut.Write([]string{"Input", "Metric", "Binary", "Amount"}); err != nil {
 		return errors.Wrap(err, "write csv header")
 	}
 
@@ -94,7 +94,7 @@ func runNTimesAndInterpret(
 			return fmt.Errorf("interpret mem stat output: %w", err)
 		}
 		for _, m := range measurements {
-			if err := csvOut.Write([]string{inputBase, rsBinBase, m.metric, m.amount}); err != nil {
+			if err := csvOut.Write([]string{inputBase, m.metric, rsBinBase, m.amount}); err != nil {
 				return errors.Wrap(err, "write csv data line")
 			}
 		}
