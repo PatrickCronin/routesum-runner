@@ -1,3 +1,4 @@
+// Package main provides a program that creates CSVs of routesum performance data over multiple runs
 package main
 
 import (
