@@ -108,27 +108,18 @@ type measurement struct {
 	amount string
 }
 
-var (
-	sectionLineRE = regexp.MustCompile(`^\S`)
-	timeLineRE    = regexp.MustCompile(`^ *(?:\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
-)
+var timeLineRE = regexp.MustCompile(`^ *(?:\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
 
 func interpret(memStats string) ([]measurement, error) {
 	var measurements []measurement
 
-	var section string
 	s := bufio.NewScanner(strings.NewReader(memStats))
 	for s.Scan() {
 		line := s.Text()
-		if sectionLineRE.MatchString(line) {
-			// Starting a new section
-			section = line
-			continue
-		}
 
 		matches := timeLineRE.FindStringSubmatch(line)
 		if len(matches) > 0 {
-			// Parsing time output
+			// It's time output
 			measurements = append(measurements, []measurement{
 				{
 					metric: "User-space Time",
@@ -143,17 +134,13 @@ func interpret(memStats string) ([]measurement, error) {
 			continue
 		}
 
-		// routesum memory metric
+		// It's a routesum memory metric
 		parts := strings.SplitN(line, ":", 2)
 		if len(parts) < 2 {
 			panic(line)
 		}
 		measurements = append(measurements, measurement{
-			metric: fmt.Sprintf(
-				"%s - %s",
-				section,
-				strings.TrimSpace(strings.SplitN(parts[0], "(", 2)[0]),
-			),
+			metric: strings.TrimSpace(parts[0]),
 			amount: strings.TrimSpace(parts[1]),
 		})
 	}
