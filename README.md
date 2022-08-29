@@ -24,22 +24,22 @@ Usage of ./routesum-runner:
         Path to the time binary. (default "/usr/bin/time")
 
 $ ./routesum-runner -input ~/routesum-performance/dshield-intelfeed-ips.txt -input ~/routesum-performance/GeoLite2-Country-Networks.txt -routesum ./routesum-bst -routesum ./routesum-radix -num-runs 10
-Input,Binary,Metric,Amount
-dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ total allocated bytes,44914264
-dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ mallocs,1594243
-dshield-intelfeed-ips.txt,routesum-bst,To Store Routes - Δ frees,468337
+Input,Metric,Binary,Amount
+GeoLite2-ASN-Networks.txt,Num internal nodes,routesum-bst,4622053
+GeoLite2-ASN-Networks.txt,Num leaf nodes,routesum-bst,4622055
+GeoLite2-ASN-Networks.txt,Size of all internal nodes,routesum-bst,463039380
 ...
-dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ total allocated bytes,17896936
-dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ mallocs,583901
-dshield-intelfeed-ips.txt,routesum-radix,To Store Routes - Δ frees,312098
+GeoLite2-ASN-Networks.txt,Num internal nodes,routesum-radix,622053
+GeoLite2-ASN-Networks.txt,Num leaf nodes,routesum-radix,622055
+GeoLite2-ASN-Networks.txt,Size of all internal nodes,routesum-radix,63039380
 ...
-GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ total allocated bytes,2355023304
-GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ mallocs,24400781
-GeoLite2-Country-Networks.txt,routesum-bst,To Store Routes - Δ frees,23528854
+GeoLite2-Country-Networks.txt,Num internal nodes,routesum-bst,496323
+GeoLite2-Country-Networks.txt,Num leaf nodes,routesum-bst,496325
+GeoLite2-Country-Networks.txt,Size of all internal nodes,routesum-bst,412266326
 ...
-GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ total allocated bytes,852038168
-GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ mallocs,17451592
-GeoLite2-Country-Networks.txt,routesum-radix,To Store Routes - Δ frees,16970186
+GeoLite2-Country-Networks.txt,Num internal nodes,routesum-radix,96323
+GeoLite2-Country-Networks.txt,Num leaf nodes,routesum-radix,96325
+GeoLite2-Country-Networks.txt,Size of all internal nodes,routesum-radix,12266326
 ...
 ```
 
