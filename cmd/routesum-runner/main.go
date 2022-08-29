@@ -63,7 +63,7 @@ func runNTimesAndInterpret(
 	if err != nil {
 		return errors.Wrapf(err, "open %s for reading", inputPath)
 	}
-	defer func() { //nolint: gosec // we're just reading from the file
+	defer func() {
 		if err := inputFile.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to close input file: %+v\n", err)
 		}
