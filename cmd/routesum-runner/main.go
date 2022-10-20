@@ -108,7 +108,7 @@ type measurement struct {
 	amount string
 }
 
-var timeLineRE = regexp.MustCompile(`^ *(?:\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
+var timeLineRE = regexp.MustCompile(`^ *(\d+[.]\d+) real *(\d+[.]\d+) user *(\d+[.]\d+) sys\s*$`)
 
 func interpret(memStats string) ([]measurement, error) {
 	var measurements []measurement
@@ -122,12 +122,16 @@ func interpret(memStats string) ([]measurement, error) {
 			// It's time output
 			measurements = append(measurements, []measurement{
 				{
-					metric: "User-space Time",
+					metric: "Real Time",
 					amount: matches[1],
 				},
 				{
-					metric: "Kernel Time",
+					metric: "User-space Time",
 					amount: matches[2],
+				},
+				{
+					metric: "Kernel Time",
+					amount: matches[3],
 				},
 			}...,
 			)
